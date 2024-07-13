@@ -1,5 +1,5 @@
 'use strict';
-
+const { ProxyAgent } = require('undici');
 /**
  * @license
  * Copyright 2024 Google LLC
@@ -243,11 +243,23 @@ function getClientHeaders(requestOptions) {
 async function makeRequest(url, body, requestOptions) {
     let response;
     try {
-        response = await fetch(url.toString(), Object.assign(Object.assign({}, buildFetchOptions(requestOptions)), { method: "POST", headers: {
-                "Content-Type": "application/json",
-                "x-goog-api-client": getClientHeaders(requestOptions),
-                "x-goog-api-key": url.apiKey,
-            }, body }));
+        // response = await fetch(url.toString(), Object.assign(Object.assign({}, buildFetchOptions(requestOptions)), { method: "POST", headers: {
+        //         "Content-Type": "application/json",
+        //         "x-goog-api-client": getClientHeaders(requestOptions),
+        //         "x-goog-api-key": url.apiKey,
+        //     }, body }));
+        const proxyUrl = "http://127.0.0.1:20171";
+        const client = new ProxyAgent(proxyUrl);
+        response = await fetch(url.toString(), {
+        method: "POST",
+        headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-client": getClientHeaders(requestOptions),
+        "x-goog-api-key": url.apiKey,
+        },
+        body,
+        dispatcher: client
+        });
         if (!response.ok) {
             let message = "";
             try {
